@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة المفرد والجمع</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --accent: #ffe66d;
+            --bg: #f7fff7;
+            --text: #2f3542;
+            --success: #2ed573;
+            --error: #ff4757;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: radial-gradient(circle at top left, #ffeaa7, #81ecec);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        canvas {
+            position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 9999;
+        }
+
+        /* نافذة تسجيل الاسم */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 10000;
+        }
+        .modal-box {
+            background: white; border-radius: 25px; padding: 35px;
+            width: 90%; max-width: 420px; text-align: center;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            animation: popIn 0.4s ease;
+        }
+        .modal-box h2 { color: var(--primary); margin-bottom: 10px; }
+        .modal-box input {
+            width: 100%; padding: 15px; margin: 15px 0;
+            border: 3px solid #dfe4ea; border-radius: 15px;
+            font-size: 1.2rem; text-align: center; font-family: inherit;
+        }
+        .modal-box button {
+            width: 100%; padding: 15px; background: var(--secondary);
+            color: white; border: none; border-radius: 15px;
+            font-size: 1.3rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 5px 0 #16a085;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15), inset 0 0 0 10px rgba(255,255,255,0.5);
+            padding: 40px;
+            width: 100%; max-width: 800px;
+            text-align: center;
+            position: relative; z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+        .student-badge {
+            display: inline-block; background: #dfe4ea;
+            padding: 5px 15px; border-radius: 20px; font-weight: 700;
+            color: #57606f; margin-bottom: 15px;
+        }
+        h1 {
+            color: var(--primary); font-size: 2.8rem; margin-bottom: 10px;
+            text-shadow: 2px 2px 0px var(--accent);
+        }
+        p.subtitle { color: var(--text); font-size: 1.3rem; margin-bottom: 25px; font-weight: 500; }
+        .score-board {
+            display: inline-block; background: var(--accent);
+            padding: 10px 30px; border-radius: 50px;
+            font-size: 1.6rem; font-weight: 800; color: #d35400;
+            margin-bottom: 30px; border: 4px dashed white;
+        }
+        .word-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .word-card {
+            background: white; border: 4px solid #f1f2f6;
+            border-radius: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
+            position: relative; overflow: hidden;
+            transition: 0.3s;
+        }
+        .word-card.success { border-color: var(--success); background: #f1fff6; pointer-events: none; }
+        .word-card.error { animation: shake 0.5s; border-color: var(--error); }
+        .singular-word {
+            font-size: 2rem; font-weight: 800;
+            color: var(--secondary); background: #f8f9fa;
+            border-radius: 15px; padding: 10px;
+        }
+        input.answer-input {
+            width: 100%; padding: 12px; font-size: 1.3rem;
+            font-family: inherit; border: 3px solid #dfe4ea;
+            border-radius: 15px; text-align: center; outline: none;
+        }
+        button.check-btn {
+            background: var(--primary); color: white; border: none;
+            border-radius: 15px; padding: 12px; font-size: 1.3rem;
+            font-family: inherit; cursor: pointer; font-weight: 800;
+            box-shadow: 0 4px 0 #d63031;
+        }
+        button.check-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #d63031; }
+
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- نافذة طلب اسم الطالب -->
+    <div class="modal-overlay" id="nameModal">
+        <div class="modal-box">
+            <h2>مرحباً يا بطل! 🌟</h2>
+            <p>اكتب اسمك للبدء في التحدي:</p>
+            <input type="text" id="studentNameInput" placeholder="اسم الطالب / الطالبة..." autofocus>
+            <button onclick="startGame()">انطلاق 🚀</button>
+        </div>
+    </div>
+
+    <canvas id="confetti"></canvas>
+
+    <div class="game-container">
+        <div class="student-badge" id="studentBadge">المشارك: جاري التحميل...</div>
+        <h1>🌟 أبطال اللغة العربية 🌟</h1>
+        <p class="subtitle">ساعد الكلمات لتصبح جمعاً سليماً!</p>
+        
+        <div class="score-board" id="scoreDisplay">النجوم: 0 / 6 ⭐</div>
+
+        <div class="word-grid" id="gameGrid"></div>
+    </div>
+
+    <script>
+        const gameData = [
+            { id: 1, singular: "شجرة", plural: ["أشجار", "اشجار"], icon: "🌳" },
+            { id: 2, singular: "يوم", plural: ["أيام", "ايام"], icon: "☀️" },
+            { id: 3, singular: "طفل", plural: ["أطفال", "اطفال"], icon: "👦" },
+            { id: 4, singular: "كلمة", plural: ["كلمات"], icon: "📝" },
+            { id: 5, singular: "عدد", plural: ["أعداد", "اعداد"], icon: "🔢" },
+            { id: 6, singular: "تلميذ", plural: ["تلاميذ"], icon: "🎒" }
+        ];
+
+        let studentName = "";
+        let score = 0;
+        let mistakes = 0;
+        const channel = new BroadcastChannel('game_results_channel');
+
+        function startGame() {
+            const input = document.getElementById('studentNameInput');
+            if(!input.value.trim()) {
+                alert("الرجاء إدخال اسمك أولاً!");
+                return;
+            }
+            studentName = input.value.trim();
+            document.getElementById('studentBadge').innerText = `المشارك البطل: ${studentName} 👤`;
+            document.getElementById('nameModal').style.display = 'none';
+        }
+
+        const grid = document.getElementById('gameGrid');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContext();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // Render UI
+        gameData.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            card.innerHTML = `
+                <div class="singular-word">${item.icon} ${item.singular}</div>
+                <input type="text" class="answer-input" id="input-${item.id}" placeholder="اكتب الجمع..." autocomplete="off">
+                <button class="check-btn" onclick="checkAnswer(${item.id})">تحقق ✔️</button>
+            `;
+            grid.appendChild(card);
+
+            card.querySelector('input').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') checkAnswer(item.id);
+            });
+        });
+
+        // Validation & Sending result
+        function checkAnswer(id) {
+            const inputEl = document.getElementById(`input-${id}`);
+            const cardEl = inputEl.closest('.word-card');
+            const data = gameData.find(d => d.id === id);
+            const userAnswer = inputEl.value.trim().replace(/\s+/g, ' ');
+
+            if (data.plural.includes(userAnswer)) {
+                cardEl.classList.remove('error');
+                cardEl.classList.add('success');
+                inputEl.disabled = true;
+                cardEl.querySelector('.check-btn').style.display = 'none';
+
+                score++;
+                scoreDisplay.innerText = `النجوم: ${score} / ${gameData.length} ⭐`;
+                playSound('win');
+                fireConfetti();
+
+                if (score === gameData.length) {
+                    saveAndSendResult();
+                    setTimeout(() => {
+                        alert(`🎉 بطل يا ${studentName}! لقد أتممت اللعبة بالكامل بنجاح.`);
+                        fireConfetti(true);
+                    }, 500);
+                }
+            } else {
+                mistakes++;
+                cardEl.classList.remove('error');
+                void cardEl.offsetWidth;
+                cardEl.classList.add('error');
+                playSound('lose');
+            }
+        }
+
+        // إرسال النتيجة إلى لوحة الإدارة
+        function saveAndSendResult() {
+            const payload = {
+                id: Date.now(),
+                name: studentName,
+                score: score,
+                total: gameData.length,
+                mistakes: mistakes,
+                timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                date: new Date().toLocaleDateString('ar-EG')
+            };
+
+            // 1. الحفظ في الـ LocalStorage
+            let allResults = JSON.parse(localStorage.getItem('game_admin_results') || '[]');
+            allResults.unshift(payload);
+            localStorage.setItem('game_admin_results', JSON.stringify(allResults));
+
+            // 2. إرسال إشعار لحظي لنافذة الإدارة المفتوحة
+            channel.postMessage({ type: 'NEW_RESULT', data: payload });
+        }
+
+        // Confetti Simple
+        const canvas = document.getElementById('confetti');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function fireConfetti(massive = false) {
+            const count = massive ? 200 : 50;
+            const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#54a0ff'];
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width, y: -10,
+                    r: Math.random() * 6 + 4, dx: Math.random() * 8 - 4, dy: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+            if(particles.length === count) animateConfetti();
+        }
+
+        function animateConfetti() {
+            if(!particles.length) return;
+            requestAnimationFrame(animateConfetti);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.y += p.dy; p.x += p.dx;
+                ctx.beginPath(); ctx.fillStyle = p.color;
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                if(p.y > canvas.height) particles.splice(i, 1);
+            });
+        }
+    </script>
+</body>
+</html>
