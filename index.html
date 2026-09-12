@@ -14,6 +14,7 @@
             --text: #2f3542;
             --success: #2ed573;
             --error: #ff4757;
+            --purple: #a55eea;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -35,7 +36,7 @@
         /* نافذة تسجيل الاسم */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
             display: flex; align-items: center; justify-content: center;
             z-index: 10000;
         }
@@ -63,33 +64,57 @@
             border-radius: 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15), inset 0 0 0 10px rgba(255,255,255,0.5);
             padding: 40px;
-            width: 100%; max-width: 800px;
+            width: 100%; max-width: 860px;
             text-align: center;
             position: relative; z-index: 10;
             backdrop-filter: blur(10px);
         }
         .student-badge {
             display: inline-block; background: #dfe4ea;
-            padding: 5px 15px; border-radius: 20px; font-weight: 700;
+            padding: 6px 18px; border-radius: 20px; font-weight: 700;
             color: #57606f; margin-bottom: 15px;
         }
         h1 {
-            color: var(--primary); font-size: 2.8rem; margin-bottom: 10px;
+            color: var(--primary); font-size: 2.8rem; margin-bottom: 5px;
             text-shadow: 2px 2px 0px var(--accent);
         }
-        p.subtitle { color: var(--text); font-size: 1.3rem; margin-bottom: 25px; font-weight: 500; }
+        p.subtitle { color: var(--text); font-size: 1.25rem; margin-bottom: 25px; font-weight: 500; }
         .score-board {
             display: inline-block; background: var(--accent);
             padding: 10px 30px; border-radius: 50px;
             font-size: 1.6rem; font-weight: 800; color: #d35400;
             margin-bottom: 30px; border: 4px dashed white;
         }
+
+        /* تنسيق أقسام اللعبة */
+        .section-box {
+            margin-bottom: 40px;
+            background: #fafafa;
+            border-radius: 25px;
+            padding: 25px 20px;
+            border: 2px dashed #dcdde1;
+        }
+        .section-header {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .section-box.reverse .section-header {
+            background: var(--purple);
+        }
+
         .word-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
         }
         .word-card {
-            background: white; border: 4px solid #f1f2f6;
+            background: white; border: 3px solid #f1f2f6;
             border-radius: 20px; padding: 20px;
             display: flex; flex-direction: column; gap: 12px;
             position: relative; overflow: hidden;
@@ -97,23 +122,28 @@
         }
         .word-card.success { border-color: var(--success); background: #f1fff6; pointer-events: none; }
         .word-card.error { animation: shake 0.5s; border-color: var(--error); }
-        .singular-word {
-            font-size: 2rem; font-weight: 800;
+        .target-word {
+            font-size: 1.8rem; font-weight: 800;
             color: var(--secondary); background: #f8f9fa;
             border-radius: 15px; padding: 10px;
         }
+        .reverse .target-word { color: var(--purple); }
         input.answer-input {
-            width: 100%; padding: 12px; font-size: 1.3rem;
-            font-family: inherit; border: 3px solid #dfe4ea;
+            width: 100%; padding: 12px; font-size: 1.2rem;
+            font-family: inherit; border: 2px solid #dfe4ea;
             border-radius: 15px; text-align: center; outline: none;
         }
         button.check-btn {
             background: var(--primary); color: white; border: none;
-            border-radius: 15px; padding: 12px; font-size: 1.3rem;
+            border-radius: 15px; padding: 10px; font-size: 1.2rem;
             font-family: inherit; cursor: pointer; font-weight: 800;
             box-shadow: 0 4px 0 #d63031;
         }
-        button.check-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #d63031; }
+        .reverse button.check-btn {
+            background: var(--purple);
+            box-shadow: 0 4px 0 #8854d0;
+        }
+        button.check-btn:active { transform: translateY(3px); box-shadow: none; }
 
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes shake {
@@ -125,7 +155,7 @@
 </head>
 <body>
 
-    <!-- نافذة طلب اسم الطالب -->
+    <!-- نافذة تسجيل الاسم -->
     <div class="modal-overlay" id="nameModal">
         <div class="modal-box">
             <h2>مرحباً يا بطل! 🌟</h2>
@@ -139,23 +169,46 @@
 
     <div class="game-container">
         <div class="student-badge" id="studentBadge">المشارك: جاري التحميل...</div>
-        <h1>🌟 أبطال اللغة العربية 🌟</h1>
-        <p class="subtitle">ساعد الكلمات لتصبح جمعاً سليماً!</p>
+        <h1>🌟 أبطال المفرد والجمع 🌟</h1>
+        <p class="subtitle">أكمل الفراغات بالكلمة الصحيحة للحصول على النجوم</p>
         
-        <div class="score-board" id="scoreDisplay">النجوم: 0 / 6 ⭐</div>
+        <div class="score-board" id="scoreDisplay">النجوم: 0 / 12 ⭐</div>
 
-        <div class="word-grid" id="gameGrid"></div>
+        <!-- القسم الأول: مفرد -> جمع -->
+        <div class="section-box">
+            <div class="section-header">الجزء الأول: من مُفرد إلى جَمْع 🌿 ➔ 🌳</div>
+            <div class="word-grid" id="gridPart1"></div>
+        </div>
+
+        <!-- القسم الثاني: جمع -> مفرد -->
+        <div class="section-box reverse">
+            <div class="section-header">الجزء الثاني: من جَمْع إلى مُفرد 📚 ➔ 📖</div>
+            <div class="word-grid" id="gridPart2"></div>
+        </div>
     </div>
 
     <script>
-        const gameData = [
-            { id: 1, singular: "شجرة", plural: ["أشجار", "اشجار"], icon: "🌳" },
-            { id: 2, singular: "يوم", plural: ["أيام", "ايام"], icon: "☀️" },
-            { id: 3, singular: "طفل", plural: ["أطفال", "اطفال"], icon: "👦" },
-            { id: 4, singular: "كلمة", plural: ["كلمات"], icon: "📝" },
-            { id: 5, singular: "عدد", plural: ["أعداد", "اعداد"], icon: "🔢" },
-            { id: 6, singular: "تلميذ", plural: ["تلاميذ"], icon: "🎒" }
+        // بيانات القسمين مع دعم مختلف خيارات الهمزات
+        const part1Data = [
+            { id: 1, word: "شجرة", answers: ["أشجار", "اشجار"], icon: "🌳", hint: "اكتب الجمع هنا..." },
+            { id: 2, word: "يوم", answers: ["أيام", "ايام"], icon: "☀️", hint: "اكتب الجمع هنا..." },
+            { id: 3, word: "طفل", answers: ["أطفال", "اطفال"], icon: "👦", hint: "اكتب الجمع هنا..." },
+            { id: 4, word: "كلمة", answers: ["كلمات"], icon: "📝", hint: "اكتب الجمع هنا..." },
+            { id: 5, word: "عدد", answers: ["أعداد", "اعداد"], icon: "🔢", hint: "اكتب الجمع هنا..." },
+            { id: 6, word: "تلميذ", answers: ["تلاميذ"], icon: "🎒", hint: "اكتب الجمع هنا..." }
         ];
+
+        const part2Data = [
+            { id: 7, word: "عصافير", answers: ["عصفور"], icon: "🐦", hint: "اكتب المفرد هنا..." },
+            { id: 8, word: "حروف", answers: ["حرف"], icon: "🔤", hint: "اكتب المفرد هنا..." },
+            { id: 9, word: "قطرات", answers: ["قطرة"], icon: "💧", hint: "اكتب المفرد هنا..." },
+            { id: 10, word: "هوايات", answers: ["هواية"], icon: "🎨", hint: "اكتب المفرد هنا..." },
+            { id: 11, word: "أصدقاء", answers: ["صديق"], icon: "🤝", hint: "اكتب المفرد هنا..." },
+            { id: 12, word: "اختراعات", answers: ["اختراع"], icon: "💡", hint: "اكتب المفرد هنا..." }
+        ];
+
+        const allQuestions = [...part1Data, ...part2Data];
+        const totalCount = allQuestions.length;
 
         let studentName = "";
         let score = 0;
@@ -169,12 +222,13 @@
                 return;
             }
             studentName = input.value.trim();
-            document.getElementById('studentBadge').innerText = `المشارك البطل: ${studentName} 👤`;
+            document.getElementById('studentBadge').innerText = `المشارك: ${studentName} 👤`;
             document.getElementById('nameModal').style.display = 'none';
         }
 
-        const grid = document.getElementById('gameGrid');
         const scoreDisplay = document.getElementById('scoreDisplay');
+        const grid1 = document.getElementById('gridPart1');
+        const grid2 = document.getElementById('gridPart2');
 
         // Audio
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -202,44 +256,49 @@
             }
         }
 
-        // Render UI
-        gameData.forEach((item) => {
-            const card = document.createElement('div');
-            card.className = 'word-card';
-            card.innerHTML = `
-                <div class="singular-word">${item.icon} ${item.singular}</div>
-                <input type="text" class="answer-input" id="input-${item.id}" placeholder="اكتب الجمع..." autocomplete="off">
-                <button class="check-btn" onclick="checkAnswer(${item.id})">تحقق ✔️</button>
-            `;
-            grid.appendChild(card);
+        // إنشاء البطاقات للقسمين
+        function renderCards(list, container) {
+            list.forEach((item) => {
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.innerHTML = `
+                    <div class="target-word">${item.icon} ${item.word}</div>
+                    <input type="text" class="answer-input" id="input-${item.id}" placeholder="${item.hint}" autocomplete="off">
+                    <button class="check-btn" onclick="checkAnswer(${item.id})">تحقق ✔️</button>
+                `;
+                container.appendChild(card);
 
-            card.querySelector('input').addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') checkAnswer(item.id);
+                card.querySelector('input').addEventListener('keypress', (e) => {
+                    if(e.key === 'Enter') checkAnswer(item.id);
+                });
             });
-        });
+        }
 
-        // Validation & Sending result
+        renderCards(part1Data, grid1);
+        renderCards(part2Data, grid2);
+
+        // التحقق من الإجابة
         function checkAnswer(id) {
             const inputEl = document.getElementById(`input-${id}`);
             const cardEl = inputEl.closest('.word-card');
-            const data = gameData.find(d => d.id === id);
+            const data = allQuestions.find(d => d.id === id);
             const userAnswer = inputEl.value.trim().replace(/\s+/g, ' ');
 
-            if (data.plural.includes(userAnswer)) {
+            if (data.answers.includes(userAnswer)) {
                 cardEl.classList.remove('error');
                 cardEl.classList.add('success');
                 inputEl.disabled = true;
                 cardEl.querySelector('.check-btn').style.display = 'none';
 
                 score++;
-                scoreDisplay.innerText = `النجوم: ${score} / ${gameData.length} ⭐`;
+                scoreDisplay.innerText = `النجوم: ${score} / ${totalCount} ⭐`;
                 playSound('win');
                 fireConfetti();
 
-                if (score === gameData.length) {
+                if (score === totalCount) {
                     saveAndSendResult();
                     setTimeout(() => {
-                        alert(`🎉 بطل يا ${studentName}! لقد أتممت اللعبة بالكامل بنجاح.`);
+                        alert(`🎉 بطل متفوق يا ${studentName}! لقد أتممت جميع أسئلة المفرد والجمع بنجاح.`);
                         fireConfetti(true);
                     }, 500);
                 }
@@ -252,28 +311,26 @@
             }
         }
 
-        // إرسال النتيجة إلى لوحة الإدارة
+        // الحفظ والإرسال المباشر للإدارة
         function saveAndSendResult() {
             const payload = {
                 id: Date.now(),
                 name: studentName,
                 score: score,
-                total: gameData.length,
+                total: totalCount,
                 mistakes: mistakes,
                 timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
                 date: new Date().toLocaleDateString('ar-EG')
             };
 
-            // 1. الحفظ في الـ LocalStorage
             let allResults = JSON.parse(localStorage.getItem('game_admin_results') || '[]');
             allResults.unshift(payload);
             localStorage.setItem('game_admin_results', JSON.stringify(allResults));
 
-            // 2. إرسال إشعار لحظي لنافذة الإدارة المفتوحة
             channel.postMessage({ type: 'NEW_RESULT', data: payload });
         }
 
-        // Confetti Simple
+        // مفرقعات الاحتفال
         const canvas = document.getElementById('confetti');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -282,8 +339,8 @@
         resize();
 
         function fireConfetti(massive = false) {
-            const count = massive ? 200 : 50;
-            const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#54a0ff'];
+            const count = massive ? 220 : 50;
+            const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#a55eea', '#54a0ff'];
             for(let i=0; i<count; i++) {
                 particles.push({
                     x: Math.random() * canvas.width, y: -10,
